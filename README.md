@@ -1,5 +1,7 @@
 # WeChat Multi-Instance Manager for macOS
 
+> 本 fork 新增可选的**原生事件监听与副本更新**：原版更新后先提醒，再弹出「稍后 / 现在更新」窗口。点击后自动退出选定副本、重建、换图标、重新签名并打开；没有定时轮询。安装入口是菜单 **9**，需要完整克隆本 fork。详见 [事件维护模块说明](autoupdate/README.md)。原有手动多开功能保留。
+
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-10.15+-blue?logo=apple" alt="macOS">
   <img src="https://img.shields.io/badge/WeChat-4.0.6.17+-green?logo=wechat" alt="WeChat">
@@ -23,6 +25,7 @@
 
 ## Features
 
+- **事件驱动维护（本 fork）** - FSEvents + 微信生命周期事件，提醒后点击更新，包含校验与失败回滚；[安装说明](autoupdate/README.md)
 - **交互式菜单** - 傻瓜式操作，无需记忆命令
 - **智能检测** - 自动扫描已有副本，避免重复创建
 - **增量创建** - 只创建缺失的实例，节省时间

@@ -21,3 +21,17 @@
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Python / local build and runtime artifacts
+__pycache__/
+*.py[cod]
+.build/
+.pytest_cache/
+# Runtime state belongs in ~/Library/Application Support, never in Git.
+autoupdate/config.json
+autoupdate/state.json
+autoupdate/manager.lock
+autoupdate/last-status.txt
+autoupdate/watcher
+autoupdate/previous.app.noindex/
+*.log

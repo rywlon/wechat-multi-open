@@ -10,6 +10,7 @@ set -euo pipefail
 # ==================== 配置 ====================
 SRC="/Applications/WeChat.app"
 BASE_BUNDLE_ID="com.tencent.xinWeChat"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ==================== 颜色输出 ====================
 GREEN='\033[0;32m'
@@ -543,6 +544,42 @@ customize_icon() {
     info "提示: 如果图标未立即更新，请稍等几秒或重启 Finder"
 }
 
+# 原生事件监听是可选模块，不改变原来的手动多开流程。
+event_updater_menu() {
+    local installer="$SCRIPT_DIR/autoupdate/installer.py"
+    if [ ! -f "$installer" ]; then
+        warn "当前下载只有单文件脚本。请 git clone 完整仓库以使用事件维护模块。"
+        return
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn "事件维护需要 Python 3 和 Xcode Command Line Tools。"
+        return
+    fi
+    echo ""
+    title "事件驱动的副本维护（无定时轮询）"
+    echo "  1) 安装 / 更新监听"
+    echo "  2) 查看监听状态"
+    echo "  3) 卸载监听（保留微信和聊天数据）"
+    echo "  0) 返回"
+    local action clone
+    read -p "请选择 [0-3]: " action
+    case "$action" in
+        1)
+            read -p "需要维护的副本编号 [2-99，默认 2]: " clone
+            clone="${clone:-2}"
+            if [[ ! "$clone" =~ ^[0-9]+$ ]] || [ "$clone" -lt 2 ] || [ "$clone" -gt 99 ]; then
+                warn "副本编号必须为 2-99"
+                return
+            fi
+            python3 "$installer" install --source "$SRC" --clone "$clone" || warn "监听未安装，请查看上方原因。"
+            ;;
+        2) python3 "$installer" status || warn "无法读取监听状态。" ;;
+        3) python3 "$installer" uninstall || warn "监听未卸载，请查看上方原因。" ;;
+        0) return ;;
+        *) warn "无效选项" ;;
+    esac
+}
+
 # ==================== 交互式菜单 ====================
 show_menu() {
     echo ""
@@ -555,6 +592,7 @@ show_menu() {
     echo "  6) 停止所有微信进程"
     echo "  7) 自定义副本图标"
     echo "  8) 退出"
+    echo "  9) 事件监听与副本更新（可选）"
     echo ""
 }
 
@@ -567,7 +605,7 @@ main() {
         show_status
         show_menu
 
-        read -p "$(echo -e ${CYAN}请输入选项 [1-8]: ${NC})" choice
+        read -p "$(echo -e ${CYAN}请输入选项 [1-9]: ${NC})" choice
 
         case "$choice" in
             1)
@@ -602,6 +640,10 @@ main() {
                 ;;
             7)
                 customize_icon
+                read -p "$(echo -e ${CYAN}按回车继续...${NC})"
+                ;;
+            9)
+                event_updater_menu
                 read -p "$(echo -e ${CYAN}按回车继续...${NC})"
                 ;;
             8)

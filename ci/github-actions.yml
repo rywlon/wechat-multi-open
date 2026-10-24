@@ -1,0 +1,24 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  python-and-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: bash -n wechat-multi-open.sh
+      - run: python -m unittest discover -s tests -v
+      - run: python -m py_compile autoupdate/manager.py autoupdate/installer.py
+  native-events:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: swiftc autoupdate/watcher.swift -o "$RUNNER_TEMP/wechat-watcher"
+      - run: '"$RUNNER_TEMP/wechat-watcher" --self-test'
+      - run: '"$RUNNER_TEMP/wechat-watcher" --event-test'
