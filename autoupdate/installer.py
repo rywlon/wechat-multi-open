@@ -35,7 +35,8 @@ def build_config(args):
         raise ValueError('副本编号必须为 2–99')
     source = Path(args.source).expanduser().absolute()
     target = Path(args.target or '/Applications/WeChat%d.app' % args.clone).expanduser().absolute()
-    icon = Path(args.icon).expanduser().absolute()
+    selected_icon = args.icon or (RUNTIME / 'clone-icon.icns' if (RUNTIME / 'clone-icon.icns').is_file() else PACKAGE.parent / 'icon/wechat-dark.icns')
+    icon = Path(selected_icon).expanduser().absolute()
     if source.resolve() == target.resolve():
         raise ValueError('原版和副本路径不能相同')
     if info(source).get('CFBundleIdentifier') != BASE_ID:
@@ -126,7 +127,8 @@ def install(args):
                 shutil.copy2(binary, RUNTIME / 'watcher.installing')
                 os.replace(RUNTIME / 'watcher.installing', RUNTIME / 'watcher')
                 os.chmod(RUNTIME / 'watcher', 0o755)
-                shutil.copy2(icon, RUNTIME / 'clone-icon.icns')
+                if icon.resolve() != (RUNTIME / 'clone-icon.icns').resolve():
+                    shutil.copy2(icon, RUNTIME / 'clone-icon.icns')
                 (RUNTIME / 'config.json').write_text(json.dumps(config, ensure_ascii=False, indent=2))
                 AGENT.write_bytes(plistlib.dumps(agent_config()))
             except Exception:
@@ -184,7 +186,7 @@ def main():
     install_parser.add_argument('--source', default='/Applications/WeChat.app')
     install_parser.add_argument('--clone', type=int, default=2)
     install_parser.add_argument('--target', help='已有副本路径，默认 /Applications/WeChatN.app')
-    install_parser.add_argument('--icon', default=str(PACKAGE.parent / 'icon/wechat-dark.icns'))
+    install_parser.add_argument('--icon', help='指定图标；省略时沿用已安装图标，首次安装默认深色')
     install_parser.add_argument('--name', default='微信（分身）')
     install_parser.add_argument('--dry-run', action='store_true')
     uninstall_parser = sub.add_parser('uninstall', help='卸载维护程序，保留应用和聊天数据')

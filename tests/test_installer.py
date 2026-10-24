@@ -90,4 +90,13 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(old_agent,agent.read_bytes())
         for name,data in originals.items():self.assertEqual(data,(runtime/name).read_bytes())
 
+    def test_reinstall_without_icon_preserves_installed_choice(self):
+        runtime=self.root/'runtime';runtime.mkdir()
+        saved=runtime/'clone-icon.icns';saved.write_bytes(b'selected blue icon')
+        self.args.icon=None
+        with patch.object(i,'RUNTIME',runtime):
+            config,icon=i.build_config(self.args)
+        self.assertEqual(saved,icon)
+        self.assertEqual(str(saved),config['icon'])
+
 if __name__=='__main__':unittest.main()
