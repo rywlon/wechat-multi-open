@@ -34,23 +34,27 @@ def build_config(args):
     if not 2 <= args.clone <= 99:
         raise ValueError('副本编号必须为 2–99')
     source = Path(args.source).expanduser().absolute()
-    target = Path(args.target or '/Applications/WeChat%d.app' % args.clone).expanduser().absolute()
+    bundle_id = BASE_ID + str(args.clone)
+    saved = json.loads((RUNTIME / 'config.json').read_text()) if (RUNTIME / 'config.json').exists() else {}
+    if saved.get('bundle_id') != bundle_id:
+        saved = {}
+    target = Path(args.target or saved.get('target') or '/Applications/WeChat%d.app' % args.clone).expanduser().absolute()
+    display_name = args.name if args.name is not None else saved.get('display_name', '微信（分身）')
     selected_icon = args.icon or (RUNTIME / 'clone-icon.icns' if (RUNTIME / 'clone-icon.icns').is_file() else PACKAGE.parent / 'icon/wechat-dark.icns')
     icon = Path(selected_icon).expanduser().absolute()
     if source.resolve() == target.resolve():
         raise ValueError('原版和副本路径不能相同')
     if info(source).get('CFBundleIdentifier') != BASE_ID:
         raise ValueError('原版的 Bundle ID 不是官方微信')
-    bundle_id = BASE_ID + str(args.clone)
     if target.exists() and info(target).get('CFBundleIdentifier') != bundle_id:
         raise ValueError('已有目标应用的 Bundle ID 不匹配，拒绝接管')
     if not icon.is_file():
         raise ValueError('找不到图标文件: %s' % icon)
-    if not args.name.strip() or any(c in args.name for c in '\n\r\x00'):
+    if not display_name.strip() or any(c in display_name for c in '\n\r\x00'):
         raise ValueError('显示名称不能为空或包含换行')
     return {
         'source': str(source), 'target': str(target), 'bundle_id': bundle_id,
-        'icon': str(RUNTIME / 'clone-icon.icns'), 'display_name': args.name,
+        'icon': str(RUNTIME / 'clone-icon.icns'), 'display_name': display_name,
     }, icon
 
 
@@ -187,7 +191,7 @@ def main():
     install_parser.add_argument('--clone', type=int, default=2)
     install_parser.add_argument('--target', help='已有副本路径，默认 /Applications/WeChatN.app')
     install_parser.add_argument('--icon', help='指定图标；省略时沿用已安装图标，首次安装默认深色')
-    install_parser.add_argument('--name', default='微信（分身）')
+    install_parser.add_argument('--name', help='指定显示名；省略时沿用已安装名称')
     install_parser.add_argument('--dry-run', action='store_true')
     uninstall_parser = sub.add_parser('uninstall', help='卸载维护程序，保留应用和聊天数据')
     uninstall_parser.add_argument('--dry-run', action='store_true')

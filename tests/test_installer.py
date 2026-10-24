@@ -99,4 +99,14 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(saved,icon)
         self.assertEqual(str(saved),config['icon'])
 
+    def test_reinstall_keeps_renamed_target_and_display_name(self):
+        runtime=self.root/'runtime';runtime.mkdir()
+        config={'source':str(self.source),'target':str(self.target),'bundle_id':i.BASE_ID+'7','display_name':'微信GMKT'}
+        (runtime/'config.json').write_text(json.dumps(config))
+        self.args.target=None;self.args.name=None
+        with patch.object(i,'RUNTIME',runtime):
+            actual,_=i.build_config(self.args)
+        self.assertEqual(str(self.target),actual['target'])
+        self.assertEqual('微信GMKT',actual['display_name'])
+
 if __name__=='__main__':unittest.main()
