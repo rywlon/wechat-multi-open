@@ -110,7 +110,7 @@ def install(args):
         AGENT.parent.mkdir(parents=True, exist_ok=True)
         domain = 'gui/%d' % os.getuid()
         import fcntl
-        files = [RUNTIME / n for n in ['manager.py', 'watcher.swift', 'watcher', 'clone-icon.icns', 'config.json']] + [AGENT]
+        files = [RUNTIME / n for n in ['manager.py', 'watcher.swift', 'README.md', 'watcher', 'clone-icon.icns', 'config.json']] + [AGENT]
         snapshots = {p: p.read_bytes() if p.exists() else None for p in files}
         with (RUNTIME / 'manager.lock').open('a') as lock:
             try:
@@ -119,7 +119,7 @@ def install(args):
                 raise RuntimeError('维护窗口或分身更新仍在进行，请先完成或取消再安装')
             run(['/bin/launchctl', 'bootout', domain + '/' + LABEL], check=False)
             try:
-                for name in ['manager.py', 'watcher.swift']:
+                for name in ['manager.py', 'watcher.swift', 'README.md']:
                     temporary = RUNTIME / (name + '.installing')
                     shutil.copy2(PACKAGE / name, temporary)
                     os.replace(temporary, RUNTIME / name)
